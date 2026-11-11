@@ -1,5 +1,5 @@
-// ble.js — connects to a Granboard (or JCDartz in Granboard mode) with Web Bluetooth
-// Hits arrive as ASCII packets like "3.4@" (= T20). "BTN@" is the red / change button.
+// ble.js — connects board  with Web Bluetooth
+
 'use strict';
 
 const Board = (() => {
@@ -7,7 +7,7 @@ const Board = (() => {
   const NOTIFY = '442f1571-8a00-9a28-cbe1-e1d4212d53eb';
   const WRITE = '442f1572-8a00-9a28-cbe1-e1d4212d53eb';
 
-  // Granboard packet -> segment (same table JCDartz uses for its Granboard mode)
+  //  packet -> segment
   const PKT = {'2.3':'S1I','2.5':'S1O','2.4':'T1','2.6':'D1','9.1':'S2I','9.2':'S2O','9.0':'T2','8.2':'D2','7.1':'S3I','7.2':'S3O','7.0':'T3','8.4':'D3','0.1':'S4I','0.5':'S4O','0.3':'T4','0.6':'D4','5.1':'S5I','5.4':'S5O','5.2':'T5','4.6':'D5','1.0':'S6I','1.3':'S6O','1.1':'T6','4.4':'D6','11.1':'S7I','11.4':'S7O','11.2':'T7','8.6':'D7','6.2':'S8I','6.5':'S8O','6.4':'T8','6.6':'D8','9.3':'S9I','9.5':'S9O','9.4':'T9','9.6':'D9','2.0':'S10I','2.2':'S10O','2.1':'T10','4.3':'D10','7.3':'S11I','7.5':'S11O','7.4':'T11','7.6':'D11','5.0':'S12I','5.5':'S12O','5.3':'T12','5.6':'D12','0.0':'S13I','0.4':'S13O','0.2':'T13','4.5':'D13','10.3':'S14I','10.5':'S14O','10.4':'T14','10.6':'D14','3.0':'S15I','3.2':'S15O','3.1':'T15','4.2':'D15','11.0':'S16I','11.5':'S16O','11.3':'T16','11.6':'D16','10.1':'S17I','10.2':'S17O','10.0':'T17','8.3':'D17','1.2':'S18I','1.5':'S18O','1.4':'T18','1.6':'D18','6.1':'S19I','6.3':'S19O','6.0':'T19','8.5':'D19','3.3':'S20I','3.5':'S20O','3.4':'T20','3.6':'D20','8.0':'SB','4.0':'DB'};
 
   // Segment IDs the LED ring uses for a hit flash, per number
@@ -102,7 +102,7 @@ const Board = (() => {
     if (m && PKT[m[1]]) onHit(PKT[m[1]]);
   }
 
-  // ---------- LED ring (Granboards with lights; ignored by JCDartz) ----------
+  // ---------- LED ring  ----------
   function send(bytes) {
     if (!wchar || !Store.settings.lights || pending > 4) return;
     pending++;
