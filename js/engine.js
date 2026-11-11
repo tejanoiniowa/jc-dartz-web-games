@@ -131,6 +131,11 @@ const Engine = (() => {
     const award = G.turnEnd ? G.turnEnd(c) : null;
     c.thrower.stats.turns++;
     S.phase = 'remove';
+    if (S.legOverAfter != null) {
+      const w = S.legOverAfter; S.legOverAfter = null;
+      if (award && award.say) Sound.say(award.say[0], award.say[1]);
+      legWon(w); return;
+    }
     render();
     UI.popScore();
     const cpu = curEntrant().kind === 'cpu';
@@ -159,6 +164,11 @@ const Engine = (() => {
   }
 
   function nextIndex() {
+    if (G.pickNext) {
+      const sd = G.pickNext(S);
+      const i = S.order.findIndex(o => o.side === sd);
+      if (i >= 0) return i;
+    }
     let n = S.cur;
     for (let k = 0; k < S.order.length; k++) {
       n = (n + 1) % S.order.length;
@@ -183,12 +193,14 @@ const Engine = (() => {
         if (d.res.legOver !== undefined) { endTurnQuiet(); legWon(d.res.legOver); return; }
       }
       endTurnQuiet();
+      if (S.legOverAfter != null) { const w = S.legOverAfter; S.legOverAfter = null; legWon(w); return; }
     }
     UI.hideRemove();
     const before = S.cur;
     S.cur = nextIndex();
     S.turnNo++;
-    if (S.cur <= before) S.round++;
+    if (S.cur <= before && !G.pickNext) { S.round++; G.roundEnd && G.roundEnd(S); }
+    else if (G.pickNext) S.round++;
     S.darts = [];
     S.phase = 'throw';
     const lim = G.roundLimit ? G.roundLimit(S) : 0;
@@ -217,6 +229,14 @@ const Engine = (() => {
   function legWon(sideIdx) {
     clearTimers();
     UI.hideRemove();
+    if (sideIdx < 0) {                       // a tie (round limit ran out level)
+      S.phase = 'over'; S.winner = -1;
+      Sound.win(); Board.Lights.win();
+      Sound.say('tie', "It's a tie!");
+      render();
+      later(() => finishMatch(), 1600);
+      return;
+    }
     const side = S.sides[sideIdx];
     side.legs++;
     S.legWinner = sideIdx;
@@ -225,7 +245,8 @@ const Engine = (() => {
     Board.Lights.win();
     if (side.legs >= need) {
       S.phase = 'over'; S.winner = sideIdx;
-      Sound.say('game_shot', 'Game shot! ' + side.name + ' wins!');
+      if (G.solo && S.sides.length === 1) Sound.say('well_done', 'Well done!');
+      else Sound.say('game_shot', 'Game shot! ' + side.name + ' wins!');
       render();
       later(() => finishMatch(), 1600);
       return;

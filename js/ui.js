@@ -13,6 +13,7 @@ const UI = (() => {
   const back = {};          // screen -> function for the BACK / Esc key
   let setup = null;         // game setup being edited
   let statsSel = null;
+  let statsGame = 'x01';
   let shownAt = 0;         // when the last game pop-up appeared
 
   // ---------------------------------------------------------------
@@ -141,7 +142,7 @@ const UI = (() => {
     const items = games.map(g => bar(g.name, () => openSetup(g.id), 'big'));
     items.push(bar('PLAYERS &amp; STATS', () => openPlayers(), 'big'));
     items.push(bar('SETUP', () => openSettings(), 'big'));
-    s.appendChild(menu('left: 340px; width: 600px; top: 150px', items));
+    s.appendChild(menu('left: 340px; width: 600px; top: 96px; gap: 10px', items));
     s.insertAdjacentHTML('beforeend', '<div class="hint"><span class="btn-dot"></span>RED BUTTON SELECTS · TAP TO CHOOSE</div>');
   }
 
@@ -196,10 +197,11 @@ const UI = (() => {
       const r = document.createElement('div'); r.className = 'row';
       r.appendChild(bar('+ PLAYER', addPlayerPick, 'small'));
       r.appendChild(bar('+ GUEST', addGuest, 'small'));
-      r.appendChild(bar('+ COMPUTER', addCpu, 'small'));
+      if (!g.noCpu) r.appendChild(bar('+ COMPUTER', addCpu, 'small'));
       left.appendChild(r);
     }
     if (!setup.entrants.length) left.insertAdjacentHTML('beforeend', '<div class="empty">Add players to start. Guests and computers don\'t keep stats.</div>');
+    else if (setup.entrants.length < (g.minPlayers || 1)) left.insertAdjacentHTML('beforeend', '<div class="empty">' + g.name + ' needs at least ' + g.minPlayers + ' players.</div>');
     s.appendChild(left);
 
     // right: options
@@ -221,7 +223,8 @@ const UI = (() => {
     if (cur === 'setup') { const fs = focusables(); setSel(ok ? go : fs[0]); }
   }
   function canStart() {
-    if (!setup.entrants.length) return false;
+    const g = Engine.games[setup.game];
+    if (setup.entrants.length < (g.minPlayers || 1)) return false;
     if (setup.teams) { const t = new Set(setup.entrants.map(e => e.team || 1)); return t.size >= 2; }
     return true;
   }
@@ -282,7 +285,8 @@ const UI = (() => {
     const s = screen('game', `
       <div class="info"><div class="a" id="g-a"></div><div class="b">${LOGO_SVG}</div><div class="c" id="g-c"></div></div>
       <div id="g-boxes"></div>
-      <div class="center"><div class="bigscore" id="g-big"></div><div class="thrower" id="g-who"></div><div class="checkout" id="g-co"></div></div>
+      <div class="center"><div class="glbl" id="g-lbl"></div><div class="bigscore" id="g-big"></div><div class="thrower" id="g-who"></div><div class="checkout" id="g-co"></div></div>
+      <div id="g-view"></div><div id="g-extra"></div>
       <div class="gbtns" id="g-btns"></div>
       <div class="strip"><div class="lg">${LOGO}</div><div class="darts" id="g-darts"></div><div class="turn"><span class="n">TURN</span><span class="v" id="g-turn">0</span></div></div>
       <div class="ovl" id="g-rm"><div class="dim"></div><div class="panel up"><div class="a" id="rm-who"></div><div class="b" id="rm-line"></div></div><div class="panel rm"><div class="a">REMOVE DARTS</div><div class="b" id="rm-b"></div></div></div>
@@ -340,11 +344,18 @@ const UI = (() => {
     });
     // info strip
     const lim = G.roundLimit ? G.roundLimit(S) : 0;
-    $('#g-a').textContent = 'ROUND ' + S.round + (lim ? ' / ' + lim : '') + (S.bestOf > 1 ? ' · LEG ' + S.leg : '');
+    $('#g-a').textContent = G.info ? G.info(S) : 'ROUND ' + S.round + (lim ? ' / ' + lim : '') + (S.bestOf > 1 ? ' · LEG ' + S.leg : '');
     $('#g-c').textContent = G.title ? G.title(S.opts) : G.name;
     // centre
+    const view = $('#g-view'), extra = $('#g-extra');
+    $('.center', $('#scr-game')).style.display = G.view ? 'none' : '';
+    view.innerHTML = G.view ? G.view(S, c) : '';
+    extra.innerHTML = G.extra ? G.extra(S, c) : '';
+    $('#g-lbl').textContent = G.label ? G.label(c) : '';
+    $('#g-lbl').style.display = G.label ? '' : 'none';
     const big = $('#g-big');
-    big.textContent = G.big(c);
+    big.classList.toggle('mid', !!(G.extra && extra.innerHTML));
+    if (!G.view) big.textContent = G.big(c);
     big.classList.toggle('bust', !!(G.bust && G.bust(c)));
     const e = c.thrower;
     $('#g-who').textContent = (e.kind === 'cpu' ? e.name + ' (COMPUTER)' : e.name) + (S.setup.teams ? ' · ' + c.side.name : '');
@@ -363,8 +374,10 @@ const UI = (() => {
       if (!d) html += `<div class="dart ${k === S.darts.length && S.phase === 'throw' ? 'next' : 'empty'}"><span class="n">DART ${k + 1}</span><span class="v">-</span></div>`;
       else {
         const v = G.value ? G.value(c, d) : d.value;
-        const miss = !d.num || d.res && d.res.bust;
-        html += `<div class="dart ${miss ? 'miss' : 'hit'}"><span class="n">${d.filler ? 'NO DART' : Segs.segName(d).toUpperCase()}</span><span class="v">${d.res && d.res.bust ? 'BUST' : d.num ? v : 'MISS'}</span></div>`;
+        const t = G.dartText ? G.dartText(c, d) : null;
+        const miss = t ? !!t.miss || !d.num : (!d.num || d.res && d.res.bust);
+        const shown = d.res && d.res.bust ? 'BUST' : t && t.v !== undefined ? t.v : d.num ? v : 'MISS';
+        html += `<div class="dart ${miss ? 'miss' : 'hit'}"><span class="n">${d.filler ? 'NO DART' : Segs.segName(d).toUpperCase()}</span><span class="v">${shown}</span></div>`;
       }
     }
     $('#g-darts').innerHTML = html;
@@ -442,21 +455,27 @@ const UI = (() => {
   function showGameOver(S, G) {
     const s = screen('over', topbar('GAME OVER', ' '));
     back.over = () => show('main');
-    const w = S.sides[S.winner];
+    const tie = S.winner < 0;
+    const winSides = tie ? (S.tied || []) : [S.winner];
+    const isW = e => winSides.some(i => S.sides[i].members.includes(e.idx));
     const cols = G.resultCols || [];
     let rows = `<div class="tr th"><span>PLAYER</span>${cols.map(c => `<span>${c}</span>`).join('')}</div>`;
-    const order = S.entrants.slice().sort((a, b) => (w.members.includes(b.idx) ? 1 : 0) - (w.members.includes(a.idx) ? 1 : 0));
+    const order = S.entrants.slice().sort((a, b) => (isW(b) ? 1 : 0) - (isW(a) ? 1 : 0) || (G.sortResults ? G.sortResults(a, b, S) : 0));
     order.slice(0, 8).forEach(e => {
-      rows += `<div class="tr${w.members.includes(e.idx) ? ' w' : ''}"><span>${esc(e.name)}</span>${G.resultRow(e, S).map(v => `<span>${v}</span>`).join('')}</div>`;
+      rows += `<div class="tr${isW(e) ? ' w' : ''}"><span>${esc(e.name)}</span>${G.resultRow(e, S).map(v => `<span>${v}</span>`).join('')}</div>`;
     });
     const left = document.createElement('div');
     left.style.cssText = 'position:absolute; left:40px; top:110px; width:700px; display:flex; flex-direction:column; gap:14px; z-index:2';
     const legs = S.bestOf > 1 ? ' · ' + S.sides.map(x => x.legs).join(' - ') : '';
-    left.innerHTML = `<div class="winner"><div class="a">WINNER${legs}</div><div class="b">${esc(w.name)}</div></div><div class="table" style="grid-template-columns:${'1fr '.repeat(cols.length)}">${rows}</div>`;
+    const solo = S.sides.length === 1;
+    const head = solo ? 'ROUND COMPLETE' : tie ? 'TIE GAME' : 'WINNER' + legs;
+    const who = solo ? S.sides[0].name : winSides.map(i => S.sides[i].name).join(' & ');
+    const note = G.overNote ? G.overNote(S) : '';
+    left.innerHTML = `<div class="winner"><div class="a">${head}</div><div class="b">${esc(who)}</div></div>${note ? `<div class="sect" style="color:var(--yel)">${note}</div>` : ''}<div class="table" style="grid-template-columns:${'1fr '.repeat(cols.length)}">${rows}</div>`;
     s.appendChild(left);
     $$('.table .tr', s).forEach(r => { r.style.gridTemplateColumns = '1.6fr' + ' 1fr'.repeat(cols.length); });
     s.appendChild(menu('left: 780px; width: 460px; top: 110px', [
-      bar('REMATCH', () => Engine.rematch(), 'big go'),
+      bar(solo ? 'GO AGAIN' : 'REMATCH', () => Engine.rematch(), 'big go'),
       bar('NEW GAME', () => openSetup(S.game), 'big'),
       bar('PLAYERS &amp; STATS', () => openPlayers(), 'big'),
       bar('MAIN MENU', () => { Engine.quit(); show('main'); }, 'big'),
@@ -480,8 +499,8 @@ const UI = (() => {
     const scroll = document.createElement('div'); scroll.style.cssText = 'display:flex; flex-direction:column; gap:10px; max-height:430px; overflow-y:auto';
     ps.forEach(p => {
       const sl = document.createElement('div'); sl.className = 'slot' + (p.id === statsSel ? ' sel' : ''); sl.setAttribute('data-f', '');
-      const x = p.stats.x01 || {};
-      sl.innerHTML = `<span class="nm">${esc(p.name)}</span><span class="n" style="width:auto">${x.games || 0} GAMES</span>`;
+      const x = Object.values(p.stats).reduce((a, b) => ({ games: (a.games || 0) + ((b && b.games) || 0) }), {});
+      sl.innerHTML = `<span class="nm">${esc(p.name)}</span><span class="n" style="width:auto">${x.games || 0} GAME${x.games === 1 ? '' : 'S'}</span>`;
       sl.onclick = () => { statsSel = p.id; renderPlayers(); };
       scroll.appendChild(sl);
     });
@@ -503,24 +522,30 @@ const UI = (() => {
     const st = document.createElement('div'); st.className = 'pstats';
     const p = statsSel && Store.get(statsSel);
     if (p) {
-      const x = p.stats.x01 || {};
-      const ppd = x.darts ? (x.points / x.darts) : 0;
+      const games = Object.values(Engine.games).filter(g => g.statKey);
+      let g = games.find(x => x.id === statsGame) || games[0];
+      const x = p.stats[g.statKey] || { history: [] };
       const stat = (v, l) => `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`;
-      st.innerHTML = `<div class="sect">01 GAMES · ${esc(p.name)}</div><div class="statgrid">
-        ${stat(x.games || 0, 'GAMES')}${stat(x.games ? Math.round(100 * x.wins / x.games) + '%' : '-', 'WINS')}${stat(ppd.toFixed(2), 'PPD')}
-        ${stat((ppd * 3).toFixed(1), '3-DART AVG')}${stat(x.tons || 0, 'TONS')}${stat(x.ton80s || 0, 'TON 80s')}
-        ${stat(x.bestOut || '-', 'BEST OUT')}${stat(x.legs ? x.legsWon + '/' + x.legs : '-', 'LEGS WON')}${stat(x.darts || 0, 'DARTS')}</div>
-        <div class="chart">${chart(x.history || [])}</div>`;
+      const ch = g.statChart(x);
+      st.innerHTML = `<div class="gtabs"></div><div class="statgrid">${g.statTiles(x).map(t => stat(t[0], t[1])).join('')}</div>
+        <div class="chart">${chart(ch.pts, ch.label)}</div>`;
+      const tabs = $('.gtabs', st);
+      games.forEach(gm => {
+        const b = bar(gm.statName, () => { statsGame = gm.id; renderPlayers(); }, 'small' + (gm === g ? ' on' : ''));
+        tabs.appendChild(b);
+      });
     } else st.innerHTML = '';
     s.appendChild(st);
     show('players');
   }
-  function chart(h) {
-    if (h.length < 2) return '<div class="empty">PPD chart shows after 2 games.</div>';
-    const W = 560, H = 120, pts = h.slice(-20), max = Math.max(...pts.map(p => p.ppd), 1) * 1.15;
-    const xy = pts.map((p, i) => [10 + i * (W - 20) / (pts.length - 1), H - 10 - (p.ppd / max) * (H - 30)]);
-    return `<svg viewBox="0 0 ${W} ${H}" aria-label="Points per dart, last ${pts.length} games">
-      <text x="8" y="16" fill="#9fb0d4" font-size="16" font-family="Teko" letter-spacing="2">PPD · LAST ${pts.length} GAMES</text>
+  function chart(h, label) {
+    if (h.length < 2) return '<div class="empty">' + label + ' chart shows after 2 games.</div>';
+    const W = 560, H = 120, pts = h.slice(-20);
+    let lo = Math.min(0, ...pts.map(p => p.v)), hi = Math.max(1, ...pts.map(p => p.v));
+    const pad = (hi - lo) * 0.15; hi += pad;
+    const xy = pts.map((p, i) => [10 + i * (W - 20) / (pts.length - 1), H - 10 - ((p.v - lo) / (hi - lo)) * (H - 30)]);
+    return `<svg viewBox="0 0 ${W} ${H}" aria-label="${label}, last ${pts.length} games">
+      <text x="8" y="16" fill="#9fb0d4" font-size="16" font-family="Teko" letter-spacing="2">${label} · LAST ${pts.length} GAMES</text>
       <polyline points="${xy.map(p => p.join(',')).join(' ')}" fill="none" stroke="#f2e600" stroke-width="3"/>
       ${xy.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="${pts[i].win ? '#8fdc2a' : '#4a5a80'}"/>`).join('')}</svg>`;
   }
