@@ -7,7 +7,7 @@
     options: [
       { key: 'start', label: 'GAME', def: 501, values: [[301, '301'], [501, '501'], [701, '701'], [901, '901']] },
       { key: 'in', label: 'IN', def: 'open', values: [['open', 'OPEN IN'], ['double', 'DOUBLE IN']] },
-      { key: 'out', label: 'OUT', def: 'open', values: [['open', 'OPEN OUT'], ['double', 'DOUBLE OUT'], ['master', 'MASTER OUT']] },
+      { key: 'out', label: 'OUT', def: 'double', values: [['open', 'OPEN OUT'], ['double', 'DOUBLE OUT'], ['master', 'MASTER OUT']] },
       { key: 'bull', label: 'BULL', def: 'split', values: [['split', '25 / 50'], ['fat', 'ANY BULL 50']] },
       { key: 'rounds', label: 'ROUND LIMIT', def: 0, values: [[0, 'NONE'], [10, '10'], [15, '15'], [20, '20'], [25, '25']] },
     ],
@@ -71,9 +71,14 @@
     },
 
     roundLimit(S) { return S.opts.rounds || 0; },
+    // Round limit ran out: lowest score wins, ties go to the better points per dart
     limitWinner(S) {
+      const ppd = s => { let p = 0, d = 0; s.members.forEach(m => { p += S.entrants[m].stats.points; d += S.entrants[m].stats.darts; }); return d ? p / d : 0; };
       let best = 0;
-      S.sides.forEach((s, i) => { if (s.data.score < S.sides[best].data.score) best = i; });
+      S.sides.forEach((s, i) => {
+        const b = S.sides[best];
+        if (s.data.score < b.data.score || (s.data.score === b.data.score && ppd(s) > ppd(b))) best = i;
+      });
       return best;
     },
 
@@ -115,7 +120,7 @@
         if (e.kind !== 'player') return;
         const p = Store.get(e.id); if (!p) return;
         const x = p.stats.x01 = Object.assign({ games: 0, wins: 0, legs: 0, legsWon: 0, darts: 0, points: 0, tons: 0, ton80s: 0, bestOut: 0, history: [] }, p.stats.x01);
-        const st = e.stats, won = S.sides[S.winner].members.includes(e.idx);
+        const st = e.stats, won = S.winner >= 0 && S.sides[S.winner].members.includes(e.idx);
         x.games++; if (won) x.wins++;
         x.legs += S.leg; x.legsWon += st.legsWon || 0;
         x.darts += st.darts; x.points += st.points;
@@ -125,6 +130,15 @@
         if (x.history.length > 50) x.history.splice(0, x.history.length - 50);
       });
     },
+    // Players & stats screen
+    statKey: 'x01', statName: '01 GAMES',
+    statTiles(x) {
+      const ppd = x.darts ? x.points / x.darts : 0;
+      return [[x.games || 0, 'GAMES'], [x.games ? Math.round(100 * x.wins / x.games) + '%' : '-', 'WINS'], [ppd.toFixed(2), 'PPD'],
+        [(ppd * 3).toFixed(1), '3-DART AVG'], [x.tons || 0, 'TONS'], [x.ton80s || 0, 'TON 80s'],
+        [x.bestOut || '-', 'BEST OUT'], [x.legs ? x.legsWon + '/' + x.legs : '-', 'LEGS WON'], [x.darts || 0, 'DARTS']];
+    },
+    statChart(x) { return { label: 'PPD', pts: (x.history || []).map(h => ({ v: h.ppd, win: h.win })) }; },
     // Rows for the game-over table: name, stat columns
     resultCols: ['PPD', 'TONS', 'BEST OUT'],
     resultRow(e) {
