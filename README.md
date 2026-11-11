@@ -1,6 +1,6 @@
 # JC Dartz Web Games
 
-Bar-style dart games for a Granboard, or JCDartz in Granboard mode, over Bluetooth.
+Bar-style dart games over Bluetooth.
 Runs in Chrome on Android tablets and phones, and on Chromebooks and PCs.
 Play it at https://tejanoiniowa.github.io/jc-dartz-web-games/
 
