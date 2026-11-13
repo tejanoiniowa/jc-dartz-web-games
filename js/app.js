@@ -20,7 +20,7 @@
     },
     state(s, msg) {
       UI.updateConn();
-      if (s === 'ok') UI.toast('Board connected');
+      if (s === 'ok') { UI.toast('Board connected'); Sound.connect(); }
       else if (s === 'off' && msg) UI.toast(msg);
     },
   });

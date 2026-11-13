@@ -39,10 +39,38 @@ const Sound = (() => {
     } catch (e) {}
   }
 
+  // ---------- Sound effect files ----------
+  // Put MP3s in audio/sfx/ with these names. Any that are missing use the built-in synth sound.
+  const SFX = ['hit_single', 'hit_double', 'hit_triple', 'hit_bull', 'hit_dbull', 'miss', 'bust', 'next', 'click', 'award', 'win', 'connect'];
+  const buf = {};
+  let loaded = false;
+  function loadSfx() {
+    if (loaded) return; loaded = true;
+    const c = ac();
+    SFX.forEach(n => {
+      fetch('audio/sfx/' + n + '.mp3').then(r => r.ok ? r.arrayBuffer() : null)
+        .then(a => a && c.decodeAudioData(a)).then(b => { if (b) buf[n] = b; }).catch(() => {});
+    });
+  }
+  // Play a file if we have it; returns false so the caller falls back to the synth
+  function file(n) {
+    const b = buf[n], g = vol();
+    if (!b) return false;
+    if (!g) return true;
+    try {
+      const c = ac(), s = c.createBufferSource(), a = c.createGain();
+      s.buffer = b; a.gain.value = g; s.connect(a); a.connect(c.destination); s.start();
+    } catch (e) {}
+    return true;
+  }
+
   const S = {
-    unlock() { try { ac(); } catch (e) {} },
-    click() { tone(1200, 0.04, 'square', 0.08); },
+    unlock() { try { ac(); loadSfx(); } catch (e) {} },
+    connect() { if (file('connect')) return; tone(660, 0.1, 'triangle', 0.2); tone(990, 0.18, 'triangle', 0.2, 0.1); },
+    click() { if (file('click')) return; tone(1200, 0.04, 'square', 0.08); },
     hit(d) {
+      const n = !d || !d.num ? 'miss' : d.num === 25 ? (d.mult === 2 ? 'hit_dbull' : 'hit_bull') : d.mult === 3 ? 'hit_triple' : d.mult === 2 ? 'hit_double' : 'hit_single';
+      if (file(n)) return;
       if (!d || !d.num) { tone(140, 0.25, 'sawtooth', 0.18, 0, 70); return; }
       noise(0.06, 0.35, 0, 1500);
       if (d.num === 25) { tone(880, 0.15, 'square', 0.18); tone(1320, 0.3, 'square', 0.18, 0.1); return; }
@@ -50,10 +78,10 @@ const Sound = (() => {
       else if (d.mult === 2) { tone(587, 0.1, 'square', 0.16); tone(880, 0.22, 'square', 0.16, 0.08); }
       else tone(660, 0.12, 'triangle', 0.22);
     },
-    bust() { tone(220, 0.5, 'sawtooth', 0.25, 0, 110); tone(180, 0.5, 'sawtooth', 0.2, 0.05, 90); },
-    next() { tone(440, 0.08, 'square', 0.1); tone(660, 0.12, 'square', 0.1, 0.07); },
-    award() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.22, 'square', 0.14, i * 0.08)); noise(0.6, 0.12, 0.1, 3000); },
-    win() { [392, 523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i === 7 ? 0.7 : 0.2, 'square', 0.15, i * 0.12)); },
+    bust() { if (file('bust')) return; tone(220, 0.5, 'sawtooth', 0.25, 0, 110); tone(180, 0.5, 'sawtooth', 0.2, 0.05, 90); },
+    next() { if (file('next')) return; tone(440, 0.08, 'square', 0.1); tone(660, 0.12, 'square', 0.1, 0.07); },
+    award() { if (file('award')) return; [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.22, 'square', 0.14, i * 0.08)); noise(0.6, 0.12, 0.1, 3000); },
+    win() { if (file('win')) return; [392, 523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i === 7 ? 0.7 : 0.2, 'square', 0.15, i * 0.12)); },
   };
 
   // ---------- Announcer ----------
