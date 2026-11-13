@@ -5,8 +5,8 @@ const UI = (() => {
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const LOGO_SVG = '<svg aria-hidden="true" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="#e0201b" stroke-width="4"/><circle cx="20" cy="20" r="10" fill="none" stroke="#f2e600" stroke-width="4"/><circle cx="20" cy="20" r="4" fill="#8fdc2a"/></svg>';
-  const LOGO = '<div class="logo">' + LOGO_SVG + '<span><span class="jc">JC</span> DARTZ</span></div>';
+  const LOGO_SVG = '<img class="logo-s" src="icons/logo.png" alt="">';
+  const LOGO = '<img class="logo" src="icons/logo.png" alt="JC Dartz">';
   const TEAM_CLS = ['t1', 't2', 't3', 't4'];
 
   let cur = 'main';
