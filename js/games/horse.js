@@ -88,7 +88,7 @@
           award = { big: 'H-O-R-S-E', red: true, sub: c.side.name + ' IS OUT', say: ['horse_out', 'H O R S E. You\'re out!'] };
           const left = active(S);
           if (left.length <= 1) { S.legOverAfter = left[0]; return award; }
-        } else award = { big: w, red: true, sub: 'MISSED ' + sh.target, say: ['letter', WORD.slice(0, sd.letters).split('').join(' ')] };
+        } else award = { big: w, red: true, sub: 'MISSED ' + sh.target, say: ['letter' + sd.letters, WORD.slice(0, sd.letters).split('').join(' ')] };
       }
       if (sh.queue.length) sh.next = sh.queue.shift();
       else setBy(S, sh.setter);
