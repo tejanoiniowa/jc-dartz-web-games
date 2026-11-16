@@ -335,3 +335,17 @@ img.logo { width: 64px; height: 64px; display: block; }
 .strip .lg img.logo { width: 72px; height: 72px; }
 .info .b { width: 84px; height: 64px; }
 .info .b img.logo-s { width: 54px; height: 54px; display: block; }
+
+/* ---------- Unlock screen ---------- */
+#scr-unlock { position: absolute; inset: 0; z-index: 90; display: none; align-items: center; justify-content: center; background: rgba(2, 2, 7, 0.9); }
+#scr-unlock.on { display: flex; }
+.ul-box { width: 560px; background: var(--panel); border: 3px solid var(--red); border-radius: 14px; padding: 24px 36px; display: flex; flex-direction: column; gap: 12px; align-items: stretch; box-shadow: 0 0 40px rgba(224, 32, 27, 0.35); }
+.ul-logo { width: 96px; height: 96px; align-self: center; }
+.ul-box h1 { margin: 0; text-align: center; font-family: 'Russo One', sans-serif; color: var(--yel); font-size: 34px; letter-spacing: 2px; }
+.ul-box label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 20px; letter-spacing: 2px; color: var(--dim); }
+.ul-box input { font: 600 28px 'Teko', sans-serif; letter-spacing: 2px; padding: 8px 14px; border-radius: 8px; border: 2px solid var(--edge); background: #000; color: var(--text); }
+.ul-box input:focus { outline: none; border-color: var(--grn-edge); }
+.ul-msg { min-height: 28px; color: var(--yel); font-size: 22px; text-align: center; }
+.ul-note { margin: 0; color: var(--dim); font-size: 18px; text-align: center; line-height: 1.2; }
+.ul-warn { border: 2px solid var(--yel); border-radius: 8px; padding: 8px 12px; color: var(--yel); font-size: 20px; line-height: 1.2; }
+.ul-warn a { color: var(--grn); }
