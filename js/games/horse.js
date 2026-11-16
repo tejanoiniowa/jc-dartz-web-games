@@ -29,7 +29,7 @@
   }
 
   const H = {
-    id: 'horse', name: 'HORSE', maxPlayers: 8, minPlayers: 2,
+    id: 'horse', name: 'HORSE', group: 'party', blurb: 'Match the checkout or take a letter', maxPlayers: 8, minPlayers: 2,
     options: [
       { key: 'range', label: 'NUMBERS', def: 'medium', values: [['easy', 'EASY 2-40'], ['medium', 'MEDIUM 41-100'], ['hard', 'HARD 101-170']] },
       { key: 'bull', label: 'BULL', def: 'fat', values: [['fat', 'ANY BULL 50'], ['split', '25 / 50']] },

@@ -17,7 +17,7 @@
   }
 
   const P = {
-    id: 'practice', name: 'TARGET PRACTICE', maxPlayers: 1, noCpu: true, solo: true,
+    id: 'practice', name: 'TARGET PRACTICE', group: 'practice', blurb: 'One target, see how often you hit it', maxPlayers: 1, noCpu: true, solo: true,
     options: [
       { key: 'type', label: 'TARGET', def: 'T', values: TYPES },
       { key: 'num', label: 'NUMBER', def: 20, values: Array.from({ length: 20 }, (_, i) => [20 - i, String(20 - i)]) },

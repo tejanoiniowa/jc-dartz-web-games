@@ -20,7 +20,7 @@
   const holeOf = S => HOLES[Math.min(S.round, 9) - 1];
 
   const G = {
-    id: 'golf', name: 'GOLF', maxPlayers: 8, options: [],
+    id: 'golf', name: 'GOLF', group: 'party', blurb: '9 holes, 13 to the bull. Lowest score wins', maxPlayers: 8, options: [],
     title() { return 'GOLF · 9 HOLES'; },
     info(S) { return 'HOLE ' + Math.min(S.round, 9) + ' / 9'; },
     init(c) { c.sides.forEach(s => { s.data = { holes: [] }; }); },
