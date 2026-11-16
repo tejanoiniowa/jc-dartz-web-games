@@ -300,7 +300,7 @@ button { font: inherit; color: inherit; }
 .bigscore.mid { font-size: 190px; }
 #g-extra { position: absolute; left: 0; right: 0; bottom: 104px; display: flex; justify-content: center; z-index: 2; pointer-events: none; }
 .card { border: 2px solid var(--edge); border-radius: 8px; background: var(--panel); padding: 2px 10px; }
-.card .cr { display: grid; grid-template-columns: 140px repeat(var(--n, 10), 52px); height: 30px; align-items: center; font-weight: 600; font-size: 24px; text-align: center; color: var(--text); }
+.card .cr { display: grid; grid-template-columns: var(--nw, 140px) repeat(var(--n, 10), var(--cw, 52px)); height: 30px; align-items: center; font-weight: 600; font-size: 24px; text-align: center; color: var(--text); }
 .card .cr .nm { text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card .hd { color: var(--dim); font-size: 20px; letter-spacing: 1px; }
 .card .now { color: var(--yel); }
@@ -326,7 +326,8 @@ button { font: inherit; color: inherit; }
 .mk.m3 { stroke: var(--grn); }
 
 /* ---------- Stats tabs ---------- */
-.gtabs { display: flex; gap: 6px; }
+.gtabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.gtabs .bar { width: auto; flex: 1 0 auto; }
 .gtabs .bar { font-size: 15px; letter-spacing: 1px; padding: 0 6px; height: 40px; }
 .bar.on { border-color: var(--grn-edge); color: var(--grn); }
 
@@ -349,3 +350,10 @@ img.logo { width: 64px; height: 64px; display: block; }
 .ul-note { margin: 0; color: var(--dim); font-size: 18px; text-align: center; line-height: 1.2; }
 .ul-warn { border: 2px solid var(--yel); border-radius: 8px; padding: 8px 12px; color: var(--yel); font-size: 20px; line-height: 1.2; }
 .ul-warn a { color: var(--grn); }
+
+/* ---------- Game groups, word targets, Shark Bite ---------- */
+.bar.tall { height: 82px; }
+.bar .two { display: flex; flex-direction: column; align-items: center; line-height: 1.05; }
+.bar .blurb { font-family: 'Teko', sans-serif; font-weight: 600; font-size: 22px; letter-spacing: 1px; color: #c9d3e8; }
+.bigscore.word { font-size: 140px; }
+.ocean { display: block; }
