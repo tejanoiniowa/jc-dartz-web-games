@@ -1,8 +1,8 @@
 // sw.js — keeps the app working offline. Bump VERSION when files change.
-const VERSION = 'jcw-4';
+const VERSION = 'jcw-5';
 const FILES = [
   './', 'index.html', 'manifest.webmanifest', 'css/app.css',
-  'js/store.js', 'js/segs.js', 'js/sound.js', 'js/ble.js', 'js/engine.js', 'js/games/common.js', 'js/games/x01.js', 'js/games/cricket.js', 'js/games/golf.js', 'js/games/horse.js', 'js/games/practice.js', 'js/ui.js', 'js/access.js', 'js/app.js',
+  'js/store.js', 'js/segs.js', 'js/sound.js', 'js/ble.js', 'js/engine.js', 'js/games/common.js', 'js/games/x01.js', 'js/games/cricket.js', 'js/games/golf.js', 'js/games/horse.js', 'js/games/practice.js', 'js/games/shark.js', 'js/games/atc.js', 'js/games/bermuda.js', 'js/ui.js', 'js/access.js', 'js/app.js',
   'fonts/russo-one.woff', 'fonts/teko.woff', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable.png', 'icons/logo.png',
 ];
 self.addEventListener('install', e => {
