@@ -4,13 +4,16 @@
 (() => {
   Store.load();
   UI.init();
+  Access.start();      // shows the unlock screen until this device has a code
 
   let lastNext = 0;
   Board.on({
     hit(key) {
+      if (Access.locked) return;
       if (UI.screen === 'game' && !UI.modalOpen) Engine.hit(key);
     },
     button() {
+      if (Access.locked) return;
       const t = Date.now();
       if (t - lastNext < 1200) return;      // one press = one action
       lastNext = t;
@@ -29,6 +32,7 @@
   // Keyboard: arrows move, Enter selects, Esc goes back. In a game: Space = next, U = undo.
   addEventListener('keydown', e => {
     if (e.target && e.target.tagName === 'INPUT') return;
+    if (Access.locked) return;
     const k = e.key;
     if (UI.screen === 'game' && !UI.modalOpen) {
       if (k === ' ' || k === 'Enter' || k === 'n') { e.preventDefault(); Engine.next(); }
