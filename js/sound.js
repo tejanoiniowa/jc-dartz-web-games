@@ -103,6 +103,13 @@ const Sound = (() => {
     a.onerror = () => { missing.add(key); speak(text); };
     a.play().catch(() => { missing.add(key); speak(text); });
   };
+  // For the TEST SOUNDS button: plays every sound file that loaded, one after another
+  S.test = function () {
+    loadSfx();
+    const have = SFX.filter(n => buf[n]);
+    have.forEach((n, i) => setTimeout(() => file(n), i * 900));
+    return { have, total: SFX.length };
+  };
   return S;
 })();
 window.Sound = Sound;

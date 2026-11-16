@@ -136,14 +136,34 @@ const UI = (() => {
   // ---------------------------------------------------------------
   // Main menu
   // ---------------------------------------------------------------
+  const GROUPS = { party: 'PARTY GAMES', practice: 'PRACTICE GAMES' };
   function buildMain() {
     const s = screen('main', topbar('MAIN MENU'));
     const games = Object.values(Engine.games);
-    const items = games.map(g => bar(g.name, () => openSetup(g.id), 'big'));
+    const items = [];
+    const seen = {};
+    games.forEach(g => {
+      if (!g.group) { items.push(bar(g.name, () => openSetup(g.id), 'big')); return; }
+      if (seen[g.group]) return;
+      seen[g.group] = true;
+      items.push(bar(GROUPS[g.group], () => openGroup(g.group), 'big'));
+    });
     items.push(bar('PLAYERS &amp; STATS', () => openPlayers(), 'big'));
     items.push(bar('SETUP', () => openSettings(), 'big'));
     s.appendChild(menu('left: 340px; width: 600px; top: 96px; gap: 10px', items));
     s.insertAdjacentHTML('beforeend', '<div class="hint"><span class="btn-dot"></span>RED BUTTON SELECTS · TAP TO CHOOSE</div>');
+  }
+
+  // A group of games (Party / Practice)
+  function openGroup(grp) {
+    const s = screen('group', topbar(GROUPS[grp]));
+    back.group = () => show('main');
+    const items = Object.values(Engine.games).filter(g => g.group === grp)
+      .map(g => bar(`<span class="two"><span>${g.name}</span><span class="blurb">${g.blurb || ''}</span></span>`, () => openSetup(g.id, grp), 'big tall'));
+    items.push(bar('BACK', () => show('main'), 'small'));
+    s.appendChild(menu('left: 300px; width: 680px; top: 120px; gap: 14px', items));
+    show('group');
+    const fs = focusables(); if (fs.length) setSel(fs[0]);
   }
 
   // ---------------------------------------------------------------
@@ -159,7 +179,9 @@ const UI = (() => {
       localStorage.setItem('jcw_last', JSON.stringify(all));
     } catch (e) {}
   }
-  function openSetup(gameId) {
+  let setupFrom = null;
+  function openSetup(gameId, from) {
+    setupFrom = from || null;
     const g = Engine.games[gameId];
     const last = lastSetup(gameId);
     setup = { game: gameId, opts: {}, entrants: [], teams: false, bestOf: 1 };
@@ -177,7 +199,7 @@ const UI = (() => {
   function renderSetup() {
     const g = Engine.games[setup.game];
     const s = screen('setup', topbar(g.name));
-    back.setup = () => show('main');
+    back.setup = () => setupFrom ? openGroup(setupFrom) : show('main');
     const max = g.maxPlayers || 8;
 
     // left: players
@@ -216,7 +238,7 @@ const UI = (() => {
     const ok = canStart();
     const go = bar('START', startGame, 'big go'); go.disabled = !ok;
     items.push(go);
-    items.push(bar('BACK', () => show('main'), 'small'));
+    items.push(bar('BACK', () => back.setup(), 'small'));
     const right = document.createElement('div'); right.className = 'menu'; right.style.cssText = 'left: 640px; width: 600px; top: 100px; gap: 10px';
     items.forEach(i => right.appendChild(i));
     s.appendChild(right);
@@ -355,7 +377,11 @@ const UI = (() => {
     $('#g-lbl').style.display = G.label ? '' : 'none';
     const big = $('#g-big');
     big.classList.toggle('mid', !!(G.extra && extra.innerHTML));
-    if (!G.view) big.textContent = G.big(c);
+    if (!G.view) {
+      const t = String(G.big(c));
+      big.textContent = t;
+      big.classList.toggle('word', t.length > 4);
+    }
     big.classList.toggle('bust', !!(G.bust && G.bust(c)));
     const e = c.thrower;
     $('#g-who').textContent = (e.kind === 'cpu' ? e.name + ' (COMPUTER)' : e.name) + (S.setup.teams ? ' · ' + c.side.name : '');
@@ -585,6 +611,13 @@ const UI = (() => {
     const R = [
       vbar('ANNOUNCER', [[true, 'ON'], [false, 'OFF']], get('announcer'), set('announcer')),
       bar('TEST ANNOUNCER', () => { Sound.unlock(); Sound.say('ton80', 'One hundred and eighty!'); }, 'small'),
+      bar('TEST SOUND FILES', () => {
+        Sound.unlock();
+        setTimeout(() => {
+          const r = Sound.test();
+          toast(r.have.length ? 'Found ' + r.have.length + ' of ' + r.total + ' sound files: ' + r.have.join(', ') : 'No sound files found in audio/sfx', 6000);
+        }, 1200);
+      }, 'small'),
       vbar('BOARD LIGHTS', [[true, 'ON'], [false, 'OFF']], get('lights'), set('lights')),
       bar('TEST BOARD LIGHTS', () => { if (!Board.canLight) toast('Connect a board with lights first'); else Board.Lights.test(); }, 'small'),
       vbar('SHOW ALL BLUETOOTH', [[false, 'OFF'], [true, 'ON']], get('btAll'), set('btAll')),
@@ -672,7 +705,7 @@ const UI = (() => {
 
   function init() {
     buildMain(); buildGame();
-    screen('setup'); screen('players'); screen('settings'); screen('over');
+    screen('setup'); screen('group'); screen('players'); screen('settings'); screen('over');
     applySettings();
     addEventListener('resize', fit);
     show('main');
