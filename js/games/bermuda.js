@@ -3,18 +3,18 @@
 'use strict';
 
 (() => {
-  // 12, 13, 14, any double, 15, 16, 17, any triple, 18, 19, 20, outer bull, double bull
-  const ROUNDS = [12, 13, 14, 'D', 15, 16, 17, 'T', 18, 19, 20, 'SB', 'DB'];
-  const SHORT = { D: 'D', T: 'T', SB: 'SB', DB: 'DB' };
-  const BIG = { D: 'DOUBLE', T: 'TRIPLE', SB: 'BULL', DB: 'D-BULL' };
-  const LONG = { D: 'ANY DOUBLE', T: 'ANY TRIPLE', SB: 'OUTER BULL', DB: 'DOUBLE BULL' };
+  // 12, 13, 14, any double, 15, 16, 17, any triple, 18, 19, 20, outer bull, any bull
+  const ROUNDS = [12, 13, 14, 'D', 15, 16, 17, 'T', 18, 19, 20, 'SB', 'B'];
+  const SHORT = { D: 'D', T: 'T', SB: 'SB', B: 'B' };
+  const BIG = { D: 'DOUBLE', T: 'TRIPLE', SB: 'BULL', B: 'BULL' };
+  const LONG = { D: 'ANY DOUBLE', T: 'ANY TRIPLE', SB: 'OUTER BULL', B: 'ANY BULL' };
   const tgt = S => ROUNDS[Math.min(S.round, 13) - 1];
   function scores(t, d) {
     if (!d.num) return false;
     if (t === 'D') return d.mult === 2;
     if (t === 'T') return d.mult === 3;
     if (t === 'SB') return d.num === 25 && d.mult === 1;
-    if (t === 'DB') return d.num === 25 && d.mult === 2;
+    if (t === 'B') return d.num === 25;
     return d.num === t;
   }
 
@@ -29,7 +29,7 @@
       const sd = c.side.data;
       d.hitT = scores(tgt(c.S), d);
       if (d.hitT) { sd.turn += d.value; sd.hits++; sd.total += d.value; c.thrower.stats.points += d.value; }
-      return {};
+      return d.hitT ? {} : { noCount: true };
     },
     turnEnd(c) {
       const sd = c.side.data, r = c.S.round - 1;
@@ -80,7 +80,7 @@
       const t = tgt(c.S), L = Engine.LEVELS[c.thrower.level] || {};
       if (t === 'D') return c.side.data.hits ? 'D20' : 'D16';
       if (t === 'T') return 'T20';
-      if (t === 'SB' || t === 'DB') return t;
+      if (t === 'SB' || t === 'B') return 'SB';
       return ((L.t || 0) >= 0.2 ? 'T' : 'S') + t;
     },
 

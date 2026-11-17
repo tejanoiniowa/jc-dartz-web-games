@@ -32,7 +32,7 @@
       sd.darts++;
       const hit = this.hits(o, sd.t, d);
       d.hitT = hit;
-      if (!hit) return {};
+      if (!hit) return { noCount: true };
       sd.hits++; sd.turnHits++;
       if (sd.t >= BULL) { sd.t = BULL + 1; sd.finishDarts = sd.darts; return { win: true }; }
       const step = o.skip && o.count === 'any' ? d.mult : 1;

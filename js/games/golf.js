@@ -24,7 +24,7 @@
     title() { return 'GOLF · 9 HOLES'; },
     info(S) { return 'HOLE ' + Math.min(S.round, 9) + ' / 9'; },
     init(c) { c.sides.forEach(s => { s.data = { holes: [] }; }); },
-    dart(c, d) { d.st = strokes(d, holeOf(c.S)); return {}; },
+    dart(c, d) { d.st = strokes(d, holeOf(c.S)); return d.st === 1 ? { noCount: true } : {}; },
     turnEnd(c) {
       const h = holeScore(c.darts, holeOf(c.S));
       c.side.data.holes[c.S.round - 1] = h;

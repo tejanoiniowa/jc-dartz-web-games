@@ -27,7 +27,7 @@
       const v = this.value(c, d);
       c.side.data.pts += v;
       c.thrower.stats.points += v;
-      return {};
+      return d.num === 25 ? { noCount: true } : {};
     },
 
     // The last surfer to throw in a round settles the bites

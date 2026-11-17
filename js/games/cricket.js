@@ -57,7 +57,7 @@
 
     dart(c, d) {
       const S = c.S, nums = S.shared.nums, k = S.opts.kind, sd = c.side.data;
-      if (!d.num || !nums.includes(d.num)) return {};
+      if (!d.num || !nums.includes(d.num)) return { noCount: true };
       const before = sd.marks[d.num];
       const used = Math.min(d.mult, Math.max(0, 3 - before));
       let extra = d.mult - used;
@@ -65,13 +65,15 @@
       let counted = used;
       if (extra && k !== 'noscore') {
         const open = S.sides.filter(s => s !== c.side && s.data.marks[d.num] < 3);
-        if (open.length) {
+        if (S.sides.length === 1 && k !== 'cut') { sd.pts += extra * val(d.num); counted += extra; }   // playing alone: closed numbers keep scoring
+        else if (open.length) {
           if (k === 'cut') open.forEach(s => { s.data.pts += extra * val(d.num); });
           else sd.pts += extra * val(d.num);
           counted += extra;
         }
       }
       sd.turnMarks += counted;
+      const noCount = counted === 0;
       c.thrower.stats.marks += counted;
       // win check
       const closedAll = nums.every(n => sd.marks[n] >= 3);
@@ -80,7 +82,7 @@
         if (k === 'noscore') return { win: true };
         if (k === 'cut' ? others.every(s => sd.pts <= s.data.pts) : others.every(s => sd.pts >= s.data.pts)) return { win: true };
       }
-      return {};
+      return noCount ? { noCount: true } : {};
     },
 
     turnEnd(c) {
@@ -111,10 +113,12 @@
 
     // Screen
     box(side, S) { return { sc: S.opts.kind === 'noscore' ? totalMarks(side) + ' MK' : side.data.pts, sub: '' }; },
-    turnTotal(c) { return c.side.data.turnMarks + ' MK'; },
+    // Live marks per round for the player throwing
+    turnLabel: 'MPR',
+    turnTotal(c) { const s = c.thrower.stats; return s.darts ? (s.marks / (s.darts / 3)).toFixed(2) : '0.00'; },
     dartText(c, d) {
       if (!d.num) return null;
-      if (!c.S.shared.nums.includes(d.num)) return { v: 'NO MARK', miss: true };
+      if (!c.S.shared.nums.includes(d.num) || (d.res && d.res.noCount)) return { v: 'NO MARK', miss: true };
       return { v: d.mult === 3 ? 'TRIPLE' : d.mult === 2 ? 'DOUBLE' : 'SINGLE' };
     },
     upNext(side, S) { return S.opts.kind === 'noscore' ? totalMarks(side) + ' MARKS' : side.data.pts + ' POINTS'; },

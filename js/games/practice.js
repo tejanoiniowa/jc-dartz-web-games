@@ -35,7 +35,7 @@
       d.hitT = hit; sd.darts++;
       if (hit) { sd.hits++; sd.turnHits++; sd.streak++; sd.best = Math.max(sd.best, sd.streak); }
       else sd.streak = 0;
-      return {};
+      return hit ? {} : { noCount: true };
     },
     turnEnd(c) {
       c.side.data.rounds[c.S.round - 1] = c.side.data.turnHits;
