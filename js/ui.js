@@ -310,7 +310,7 @@ const UI = (() => {
       <div class="center"><div class="glbl" id="g-lbl"></div><div class="bigscore" id="g-big"></div><div class="thrower" id="g-who"></div><div class="checkout" id="g-co"></div></div>
       <div id="g-view"></div><div id="g-extra"></div>
       <div class="gbtns" id="g-btns"></div>
-      <div class="strip"><div class="lg">${LOGO}</div><div class="darts" id="g-darts"></div><div class="turn"><span class="n">TURN</span><span class="v" id="g-turn">0</span></div></div>
+      <div class="strip"><div class="lg">${LOGO}</div><div class="darts" id="g-darts"></div><div class="turn"><span class="n" id="g-turnlbl">TURN</span><span class="v" id="g-turn">0</span></div></div>
       <div class="ovl" id="g-rm"><div class="dim"></div><div class="panel up"><div class="a" id="rm-who"></div><div class="b" id="rm-line"></div></div><div class="panel rm"><div class="a">REMOVE DARTS</div><div class="b" id="rm-b"></div></div></div>
       <div class="ovl" id="g-award"></div>`);
     const b = $('#g-btns', s);
@@ -408,6 +408,7 @@ const UI = (() => {
     }
     $('#g-darts').innerHTML = html;
     $('#g-turn').textContent = G.turnTotal ? G.turnTotal(c) : '';
+    $('#g-turnlbl').textContent = G.turnLabel || 'TURN';
     // buttons
     const cpu = e.kind === 'cpu';
     $('.gbtn.g-next').disabled = cpu || S.phase === 'over' || S.phase === 'legover';

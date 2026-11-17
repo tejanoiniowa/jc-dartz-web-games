@@ -116,6 +116,7 @@ const Engine = (() => {
     c.thrower.stats.darts++;
 
     if (res.bust) { Sound.bust(); Board.Lights.bust(); }
+    else if (res.noCount) Sound.hit(null);          // a dart that doesn't count sounds like a miss
     else { Sound.hit(d); Board.Lights.hit(d); }
     if (res.say) Sound.say(res.say[0], res.say[1]);
 
